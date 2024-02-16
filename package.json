@@ -2,7 +2,7 @@
   "name": "battleship",
   "version": "1.0.0",
   "description": "Websocket battleship server",
-  "main": "index.js",
+  "main": "index.ts",
   "engines": {
     "node": ">=20.0.0"
   },
@@ -13,22 +13,16 @@
     "lint": "eslint \"src/**/*.ts\" --fix",
     "test": "jest --silent"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Greys73/nodejs-battleship.git"
-  },
   "author": "Vladimir Myazin",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Greys73/nodejs-battleship/issues"
-  },
-  "homepage": "https://github.com/Greys73/nodejs-battleship#readme",
   "dependencies": {
     "cross-env": "^7.0.3",
-    "dotenv": "^16.4.1"
+    "dotenv": "^16.4.1",
+    "ws": "^8.16.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
+    "@types/ws": "^8.5.10",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "eslint": "^8.56.0",
