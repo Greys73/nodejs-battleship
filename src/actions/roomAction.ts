@@ -25,6 +25,14 @@ export const addUserToRoom = (
   }
 };
 
+export const removeUser = (socket: WebSocket) => {
+  const user = users.getUsers().find((user) => user.socket === socket);
+  if (user) {
+    const room = rooms.findUserInRoom(user);
+    if (room) rooms.remUserFromRoom(room.id, user);
+  }
+}
+
 export const getReadyRooms = () => {
   const allRooms = rooms.getRooms();
   const readyRooms = allRooms.filter((room) => room.users.length === 1);

@@ -21,10 +21,28 @@ export type TRoom = {
 };
 export type TRooms = TRoom[];
 
+export type TPlayer = {
+  playerId: number;
+  ships: TShips;
+};
+export type TPlayers = TPlayer[];
+
 export type TGame = {
   id: number;
   maker: TUser;
-  players?: TUsers;
-  room?: TRoom;
+  players: TPlayers;
+  room: TRoom;
+  curPlayer: number;
 };
 export type TGames = TGame[];
+
+export type TShip = {
+  position: {
+    x: number;
+    y: number;
+  };
+  direction: boolean;
+  length: number;
+  type: 'small' | 'medium' | 'large' | 'huge';
+};
+export type TShips = TShip[];

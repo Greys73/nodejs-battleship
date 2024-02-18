@@ -4,7 +4,9 @@ import {
   addUserToRoom,
   createRoom,
   getReadyRooms,
+  removeUser,
 } from '../actions/roomAction';
+import { addShips } from '../actions/gameAction';
 
 const PORT = 3000;
 
@@ -13,8 +15,12 @@ const wss = new WebSocketServer({ port: PORT });
 console.log(`Start WebSocketServer on the ${PORT} port!`);
 wss.on('connection', (ws) => {
   ws.on('error', console.error);
-  ws.on('close', (socket: WebSocket) => socket.CLOSED);
   ws.on('message', input.bind(ws));
+  ws.on('close', () => {
+    removeUser(ws);
+    // TODO finish_game
+    sendForAll(getReadyRooms());
+  });
 });
 
 function sendForAll(responseData: string) {
@@ -23,7 +29,6 @@ function sendForAll(responseData: string) {
 
 function input(this: WebSocket, _data: string) {
   const { type, data } = JSON.parse(_data);
-  // const sendForThis = (data: TCommand) => this.send(respToString(data));
 
   switch (type) {
     case 'reg':
@@ -39,7 +44,7 @@ function input(this: WebSocket, _data: string) {
       sendForAll(getReadyRooms());
       break;
     case 'add_ships':
-      // Add ships to the game board
+      addShips(JSON.parse(data));
       break;
     case 'attack':
       // Attack
@@ -52,20 +57,6 @@ function input(this: WebSocket, _data: string) {
   }
 
   console.log(`'${type}' : ${data}`);
-
-  // const someData = {
-  //   type:"reg",
-  //   data: {
-  //     name: 'Vova',
-  //     index: 55236,
-  //     error: true,
-  //     errorText: "User Exist!"
-  //   },
-  //   id:0
-  // }
-
-  // sendForThis(someData);
-  // sendForAll(someData);
 }
 
 export default wss;

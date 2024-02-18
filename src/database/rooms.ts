@@ -31,6 +31,14 @@ class RoomsDB {
   findUserInRoom = (_user: TUser) => {
     return this.rooms.find((room) => room.users.find((user) => user === _user));
   };
+
+  remUserFromRoom = (roomId: number, user: TUser) => {
+    const room = this.rooms[roomId];
+    if (room) {
+      const index = room.users.findIndex((usr) => usr.id === user.id);
+      room.users.splice(index, 1);
+    }
+  };
 }
 
 const rooms = new RoomsDB();

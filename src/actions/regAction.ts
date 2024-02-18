@@ -7,18 +7,18 @@ const ERR_EXIST = (name: string) =>
   `User ${name} already exists in database. Password incorrect.`;
 const ERR_CONNECT = (name: string) =>
   `User ${name} already have another open session.`;
-const response = {
-  id: 0,
-  type: 'reg',
-  data: {
-    name: '',
-    index: 0,
-    error: true,
-    errorText: 'Unknown error!',
-  },
-};
 
 export const regUser = (socket: WebSocket, data: TUser) => {
+  const response = {
+    id: 0,
+    type: 'reg',
+    data: {
+      name: '',
+      index: 0,
+      error: true,
+      errorText: '',
+    },
+  };
   const existUser = users.getUser(data.name);
   if (existUser) {
     if (existUser.password === data.password) {
