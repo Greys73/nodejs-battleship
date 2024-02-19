@@ -1,6 +1,6 @@
 import { WebSocket } from 'ws';
 import rooms from '../database/rooms';
-import { respToString } from '../utils/convert';
+import { respToString } from '../utils/utils';
 import users from '../database/users';
 import { createGame } from './gameAction';
 
@@ -31,7 +31,7 @@ export const removeUser = (socket: WebSocket) => {
     const room = rooms.findUserInRoom(user);
     if (room) rooms.remUserFromRoom(room.id, user);
   }
-}
+};
 
 export const getReadyRooms = () => {
   const allRooms = rooms.getRooms();

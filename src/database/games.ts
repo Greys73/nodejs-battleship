@@ -24,6 +24,7 @@ class GamesDB {
     game.players.push({
       playerId,
       ships,
+      shoots: [],
     });
     return game;
   };

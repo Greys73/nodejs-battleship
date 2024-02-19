@@ -24,6 +24,7 @@ export type TRooms = TRoom[];
 export type TPlayer = {
   playerId: number;
   ships: TShips;
+  shoots: { x: number; y: number }[];
 };
 export type TPlayers = TPlayer[];
 
@@ -44,5 +45,22 @@ export type TShip = {
   direction: boolean;
   length: number;
   type: 'small' | 'medium' | 'large' | 'huge';
+  damage?: number;
 };
 export type TShips = TShip[];
+
+export type TAttack = {
+  gameId: number;
+  x?: number;
+  y?: number;
+  indexPlayer: number;
+};
+
+export type TAttackResponse = {
+  position: {
+    x: number;
+    y: number;
+  };
+  currentPlayer: number;
+  status: 'miss' | 'killed' | 'shot';
+};

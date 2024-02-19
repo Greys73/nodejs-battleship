@@ -1,6 +1,14 @@
-import { TGame, TShips, TUser } from './../types/types';
-import { respToString } from '../utils/convert';
-import { TRoom } from '../types/types';
+import { WebSocket } from 'ws';
+import {
+  TRoom,
+  TAttack,
+  TGame,
+  TShips,
+  TUser,
+  TShip,
+  TAttackResponse,
+} from './../types/types';
+import { randomNumber, respToString } from '../utils/utils';
 import games from '../database/games';
 
 export const createGame = (user: TUser, room: TRoom) => {
@@ -39,8 +47,8 @@ export const startGame = (game: TGame, startPlayerId: number) => {
       },
     };
     user.socket?.send(respToString(response));
-    console.log(respToString(response));
   });
+  game.curPlayer = startPlayerId;
   sendTurn(game.room, startPlayerId);
 };
 
@@ -57,3 +65,60 @@ const sendTurn = (room: TRoom, turn: number) => {
   });
 };
 
+export const getAttack = (socket: WebSocket, data: TAttack) => {
+  const {
+    gameId,
+    x = randomNumber(0, 10),
+    y = randomNumber(0, 10),
+    indexPlayer,
+  } = data;
+  const game = games.getGameById(gameId);
+  const enemy = game.players.find((plr) => plr.playerId !== indexPlayer);
+  if (indexPlayer !== game.curPlayer || !enemy) return false;
+
+  const responseData: TAttackResponse = {
+    position: { x, y },
+    currentPlayer: indexPlayer,
+    status: 'miss',
+  };
+
+  const hittedShip = enemy.ships.find((ship) => checkHit(ship, x, y));
+  if (hittedShip) {
+    const repeat = enemy.shoots.find((s) => s.x === x && s.y === y);
+    if (!repeat) {
+      enemy.shoots.push({ x, y });
+      hittedShip.damage = hittedShip.damage ? hittedShip.damage + 1 : 1;
+    }
+    responseData.status =
+      hittedShip.damage === hittedShip.length ? 'killed' : 'shot';
+  }
+  //checkFinish();
+  sendAttack(game, responseData);
+};
+
+const checkHit = (ship: TShip, _x: number, _y: number) => {
+  const { x, y } = ship.position;
+  const len = ship.length;
+  const vertical = ship.direction;
+  if (vertical) {
+    for (let i = y; i < y + len; i++) {
+      if (_x === x && _y === i) return true;
+    }
+  } else {
+    for (let i = x; i < x + len; i++) {
+      if (_x === i && _y === y) return true;
+    }
+  }
+  return false;
+};
+
+const sendAttack = (game: TGame, data: TAttackResponse) => {
+  const response = {
+    type: 'attack',
+    data,
+    id: 0,
+  };
+  game.room.users.forEach((usr) => {
+    usr.socket?.send(respToString(response));
+  });
+};

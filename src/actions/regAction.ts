@@ -1,7 +1,7 @@
 import { WebSocket } from 'ws';
 import users from '../database/users';
 import { TUser } from '../types/types';
-import { respToString } from '../utils/convert';
+import { respToString } from '../utils/utils';
 
 const ERR_EXIST = (name: string) =>
   `User ${name} already exists in database. Password incorrect.`;

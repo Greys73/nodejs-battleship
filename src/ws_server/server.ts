@@ -6,7 +6,7 @@ import {
   getReadyRooms,
   removeUser,
 } from '../actions/roomAction';
-import { addShips } from '../actions/gameAction';
+import { addShips, getAttack } from '../actions/gameAction';
 
 const PORT = 3000;
 
@@ -47,10 +47,10 @@ function input(this: WebSocket, _data: string) {
       addShips(JSON.parse(data));
       break;
     case 'attack':
-      // Attack
+      getAttack(this, JSON.parse(data));
       break;
     case 'randomAttack':
-      // Random attack
+      getAttack(this, JSON.parse(data));
       break;
     default:
       break;
