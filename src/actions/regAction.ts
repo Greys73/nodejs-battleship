@@ -19,7 +19,7 @@ export const regUser = (socket: WebSocket, data: TUser) => {
       errorText: '',
     },
   };
-  const existUser = users.getUser(data.name);
+  const existUser = users.getUserByName(data.name);
   if (existUser) {
     if (existUser.password === data.password) {
       if (existUser.socket!.readyState === 1) {
@@ -29,6 +29,7 @@ export const regUser = (socket: WebSocket, data: TUser) => {
         response.data.error = false;
         response.data.name = existUser.name;
         response.data.index = existUser.id!;
+        existUser.socket = socket;
       }
     } else {
       response.data.error = true;

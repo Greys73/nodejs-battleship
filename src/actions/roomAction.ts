@@ -5,9 +5,10 @@ import users from '../database/users';
 import { createGame } from './gameAction';
 
 export const createRoom = (socket: WebSocket) => {
-  const user = users.getUsers().find((user) => user.socket === socket);
+  const user = users.getUserBySocket(socket);
   if (user) {
-    if (!rooms.findUserInRoom(user)) {
+    console.log(rooms.getRooms());
+    if (rooms.findUserInRoom(user) === undefined) {
       rooms.addRoom(user);
     }
   }
@@ -18,22 +19,22 @@ export const addUserToRoom = (
   data: { indexRoom: number },
 ) => {
   const { indexRoom: id } = data;
-  const user = users.getUsers().find((user) => user.socket === socket);
+  const user = users.getUserBySocket(socket);
   if (user) {
     const room = rooms.addUser(id, user);
-    if (room.users.length > 1) createGame(user, room);
+    if (room && room.users.length > 1) createGame(user, room);
   }
 };
 
-export const removeUser = (socket: WebSocket) => {
-  const user = users.getUsers().find((user) => user.socket === socket);
+export const removeUserFromRoom = (socket: WebSocket) => {
+  const user = users.getUserBySocket(socket);
   if (user) {
     const room = rooms.findUserInRoom(user);
     if (room) rooms.remUserFromRoom(room.id, user);
   }
 };
 
-export const getReadyRooms = () => {
+export const getResponseReadyRooms = () => {
   const allRooms = rooms.getRooms();
   const readyRooms = allRooms.filter((room) => room.users.length === 1);
   const data = readyRooms.map((room) => ({

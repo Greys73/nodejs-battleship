@@ -1,4 +1,3 @@
-import { WebSocket } from 'ws';
 import {
   TRoom,
   TAttack,
@@ -10,6 +9,8 @@ import {
 } from './../types/types';
 import { randomNumber, respToString } from '../utils/utils';
 import games from '../database/games';
+import rooms from '../database/rooms';
+import users from '../database/users';
 
 export const createGame = (user: TUser, room: TRoom) => {
   const response = {
@@ -24,6 +25,14 @@ export const createGame = (user: TUser, room: TRoom) => {
     response.data.idPlayer = usr.id!;
     usr.socket?.send(respToString(response));
   });
+
+  rooms.getRooms().forEach((croom) => {
+    if (croom.id !== room.id) {
+      if (croom.users.find((usr) => usr === user)) {
+        rooms.remUserFromRoom(croom.id, user);
+      }
+    }
+  });
 };
 
 export const addShips = (data: {
@@ -33,7 +42,7 @@ export const addShips = (data: {
 }) => {
   const { gameId, ships, indexPlayer } = data;
   const game = games.addPlayerShips(gameId, indexPlayer, ships);
-  if (game.players.length > 1) startGame(game, indexPlayer);
+  if (game && game.players.length > 1) startGame(game, indexPlayer);
 };
 
 export const startGame = (game: TGame, startPlayerId: number) => {
@@ -65,14 +74,15 @@ const sendTurn = (room: TRoom, turn: number) => {
   });
 };
 
-export const getAttack = (socket: WebSocket, data: TAttack) => {
+export const getAttack = (data: TAttack) => {
   const {
     gameId,
     x = randomNumber(0, 10),
     y = randomNumber(0, 10),
     indexPlayer,
   } = data;
-  const game = games.getGameById(gameId);
+  const game = games.getGame(gameId);
+  if (!game) return false;
   const enemy = game.players.find((plr) => plr.playerId !== indexPlayer);
   if (indexPlayer !== game.curPlayer || !enemy) return false;
 
@@ -92,7 +102,7 @@ export const getAttack = (socket: WebSocket, data: TAttack) => {
     responseData.status =
       hittedShip.damage === hittedShip.length ? 'killed' : 'shot';
   }
-  //checkFinish();
+  checkFinish();
   sendAttack(game, responseData);
 };
 
@@ -122,3 +132,52 @@ const sendAttack = (game: TGame, data: TAttackResponse) => {
     usr.socket?.send(respToString(response));
   });
 };
+
+export const checkFinish = () => {
+  const response = {
+    type: 'finish',
+    data: { winPlayer: 0 },
+    id: 0,
+  };
+
+  games.getGames().forEach((game) => {
+    const roomUsers = game.room.users;
+    if (game && roomUsers.length === 1) {
+      const userId = roomUsers[0].id;
+      if (userId) response.data.winPlayer = userId;
+    }
+
+    game.players.forEach((player) => {
+      if (player.ships.every((ship) => ship.damage === ship.length)) {
+        const enemy = game.players.find(
+          (plr) => plr.playerId !== player.playerId,
+        );
+        if (enemy) {
+          response.data.winPlayer = enemy?.playerId;
+        }
+      }
+    });
+
+    if (response.data.winPlayer) {
+      game.room.users.forEach((usr) =>
+        usr.socket?.send(respToString(response)),
+      );
+      const user = users.getUserById(response.data.winPlayer);
+      if (user) user.wins += 1;
+      users.getUsers().forEach(usr => usr.socket?.send(getResponseWinners()));
+      rooms.deleteRoom(game.room.id);
+      games.deleteGame(game.id);
+    }
+
+  });
+};
+
+export const getResponseWinners = () => {
+  const data = users.getUsers().sort(user => user.wins).map(user => {
+    return {
+      name: user.name,
+      wins: user.wins,
+    }
+  });
+  return respToString({ type: 'update_winners', data, id: 0 });
+}

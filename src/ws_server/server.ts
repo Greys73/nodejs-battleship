@@ -3,10 +3,10 @@ import { regUser } from '../actions/regAction';
 import {
   addUserToRoom,
   createRoom,
-  getReadyRooms,
-  removeUser,
+  getResponseReadyRooms,
+  removeUserFromRoom,
 } from '../actions/roomAction';
-import { addShips, getAttack } from '../actions/gameAction';
+import { addShips, checkFinish, getAttack, getResponseWinners } from '../actions/gameAction';
 
 const PORT = 3000;
 
@@ -17,9 +17,9 @@ wss.on('connection', (ws) => {
   ws.on('error', console.error);
   ws.on('message', input.bind(ws));
   ws.on('close', () => {
-    removeUser(ws);
-    // TODO finish_game
-    sendForAll(getReadyRooms());
+    removeUserFromRoom(ws);
+    checkFinish();
+    sendForAll(getResponseReadyRooms());
   });
 });
 
@@ -33,24 +33,25 @@ function input(this: WebSocket, _data: string) {
   switch (type) {
     case 'reg':
       regUser(this, JSON.parse(data));
-      sendForAll(getReadyRooms());
+      sendForAll(getResponseReadyRooms());
+      sendForAll(getResponseWinners());
       break;
     case 'create_room':
       createRoom(this);
-      sendForAll(getReadyRooms());
+      sendForAll(getResponseReadyRooms());
       break;
     case 'add_user_to_room':
       addUserToRoom(this, JSON.parse(data));
-      sendForAll(getReadyRooms());
+      sendForAll(getResponseReadyRooms());
       break;
     case 'add_ships':
       addShips(JSON.parse(data));
       break;
     case 'attack':
-      getAttack(this, JSON.parse(data));
+      getAttack(JSON.parse(data));
       break;
     case 'randomAttack':
-      getAttack(this, JSON.parse(data));
+      getAttack(JSON.parse(data));
       break;
     default:
       break;

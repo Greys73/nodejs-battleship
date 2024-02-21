@@ -9,6 +9,7 @@ export type TUser = {
   id?: number;
   name: string;
   password: string;
+  wins: number;
   socket?: WebSocket;
   error?: boolean;
   errorText?: string;

@@ -1,4 +1,5 @@
 import { TGame, TGames, TPlayers, TRoom, TShips, TUser } from '../types/types';
+import generateCustomId from '../utils/generateId';
 
 class GamesDB {
   games: TGames;
@@ -9,10 +10,10 @@ class GamesDB {
 
   getGames = () => this.games;
 
-  getGameById = (id: number) => this.games[id];
+  getGame = (id: number) => this.games.find((game) => game.id === id);
 
   addGame = (maker: TUser, room: TRoom) => {
-    const id = this.games.length;
+    const id = generateCustomId();
     const players: TPlayers = [];
     const game: TGame = { id, maker, players, room, curPlayer: 0 };
     this.games.push(game);
@@ -20,13 +21,20 @@ class GamesDB {
   };
 
   addPlayerShips = (gameId: number, playerId: number, ships: TShips) => {
-    const game = this.games[gameId];
-    game.players.push({
-      playerId,
-      ships,
-      shoots: [],
-    });
+    const game = this.getGame(gameId);
+    if (game) {
+      game.players.push({
+        playerId,
+        ships,
+        shoots: [],
+      });
+    }
     return game;
+  };
+
+  deleteGame = (id: number) => {
+    const index = this.games.findIndex((game) => game.id === id);
+    this.games.splice(index, 1);
   };
 }
 

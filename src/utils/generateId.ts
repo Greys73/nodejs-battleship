@@ -1,11 +1,10 @@
-const generateCustomId = (): string => {
-  const characters =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+const generateCustomId = (): number => {
+  const characters = '123456789';
   let id = '';
   for (let i = 0; i < 6; i++) {
     id += characters.charAt(Math.floor(Math.random() * characters.length));
   }
-  return id;
+  return +id;
 };
 
 export default generateCustomId;
