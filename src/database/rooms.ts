@@ -14,7 +14,7 @@ class RoomsDB {
 
   addRoom = (_user: TUser) => {
     const id = generateCustomId();
-    const room: TRoom = { id, users: [ _user ] };
+    const room: TRoom = { id, users: [_user] };
     this.rooms.push(room);
     return room;
   };

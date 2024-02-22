@@ -6,7 +6,8 @@ import {
   getResponseReadyRooms,
   removeUserFromRoom,
 } from '../actions/roomAction';
-import { addShips, checkFinish, getAttack, getResponseWinners } from '../actions/gameAction';
+import { addShips, getAttack } from '../actions/gameAction';
+import { checkFinish, getResponseWinners } from '../actions/finishAction';
 
 const PORT = 3000;
 

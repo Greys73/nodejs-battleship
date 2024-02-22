@@ -10,7 +10,9 @@ import {
 import { randomNumber, respToString } from '../utils/utils';
 import games from '../database/games';
 import rooms from '../database/rooms';
-import users from '../database/users';
+import { checkFinish } from './finishAction';
+
+const FIELD_SIZE = 10;
 
 export const createGame = (user: TUser, room: TRoom) => {
   const response = {
@@ -46,16 +48,19 @@ export const addShips = (data: {
 };
 
 export const startGame = (game: TGame, startPlayerId: number) => {
-  game.room.users.forEach((user, id) => {
-    const response = {
-      id: 0,
-      type: 'start_game',
-      data: {
-        ships: game.players[id].ships,
-        currentPlayerIndex: game.players[id].playerId,
-      },
-    };
-    user.socket?.send(respToString(response));
+  game.room.users.forEach((user) => {
+    const player = game.players.find((plr) => plr.playerId === user.id);
+    if (player) {
+      const response = {
+        id: 0,
+        type: 'start_game',
+        data: {
+          ships: player.ships,
+          currentPlayerIndex: player.playerId,
+        },
+      };
+      user.socket?.send(respToString(response));
+    }
   });
   game.curPlayer = startPlayerId;
   sendTurn(game.room, startPlayerId);
@@ -77,8 +82,8 @@ const sendTurn = (room: TRoom, turn: number) => {
 export const getAttack = (data: TAttack) => {
   const {
     gameId,
-    x = randomNumber(0, 10),
-    y = randomNumber(0, 10),
+    x = randomNumber(0, FIELD_SIZE),
+    y = randomNumber(0, FIELD_SIZE),
     indexPlayer,
   } = data;
   const game = games.getGame(gameId);
@@ -99,11 +104,26 @@ export const getAttack = (data: TAttack) => {
       enemy.shoots.push({ x, y });
       hittedShip.damage = hittedShip.damage ? hittedShip.damage + 1 : 1;
     }
-    responseData.status =
-      hittedShip.damage === hittedShip.length ? 'killed' : 'shot';
+    if (hittedShip.damage === hittedShip.length) {
+      missAroundShip(hittedShip).forEach(c => {
+        responseData.position.x = c.x;
+        responseData.position.y = c.y;
+        sendAttack(game, responseData);
+      });
+      responseData.status = 'killed';
+      fullDestroyShip(hittedShip).forEach(c => {
+        responseData.position.x = c.x;
+        responseData.position.y = c.y;
+        sendAttack(game, responseData);
+      });
+      checkFinish();
+    } else {
+      responseData.status = 'shot';
+      sendAttack(game, responseData);
+    }
+  } else {
+    sendAttack(game, responseData);
   }
-  checkFinish();
-  sendAttack(game, responseData);
 };
 
 const checkHit = (ship: TShip, _x: number, _y: number) => {
@@ -122,6 +142,56 @@ const checkHit = (ship: TShip, _x: number, _y: number) => {
   return false;
 };
 
+const missAroundShip = (ship: TShip) => {
+  const { x, y } = ship.position;
+  const len = ship.length;
+  const vertical = ship.direction;
+  const startEnd = vertical
+    ? [
+        { x, y },
+        { x, y: y + len - 1 },
+      ]
+    : [
+        { x, y },
+        { x: x + len - 1, y },
+      ];
+  const cells: { x: number; y: number }[] = [];
+  startEnd.forEach((dot) => {
+    for (let i = dot.x - 1; i <= dot.x + 1; i++) {
+      for (let j = dot.y - 1; j <= dot.y + 1; j++) {
+        if (
+          i >= 0 &&
+          j >= 0 &&
+          i <= FIELD_SIZE &&
+          j <= FIELD_SIZE &&
+          !cells.find((c) => c.x === i && c.y === j)
+        ) {
+          cells.push({ x: i, y: j });
+        }
+      }
+    }
+  });
+
+  return cells;
+};
+
+const fullDestroyShip = (ship: TShip) => {
+  const { x, y } = ship.position;
+  const len = ship.length;
+  const vertical = ship.direction;
+  const cells: { x: number; y: number }[] = [];
+  if (vertical) {
+    for (let i = y; i < y + len; i++) {
+      cells.push({x, y: i});
+    }
+  } else {
+    for (let i = x; i < x + len; i++) {
+      cells.push({x: i, y});
+    }
+  }
+  return cells;
+}
+
 const sendAttack = (game: TGame, data: TAttackResponse) => {
   const response = {
     type: 'attack',
@@ -132,52 +202,3 @@ const sendAttack = (game: TGame, data: TAttackResponse) => {
     usr.socket?.send(respToString(response));
   });
 };
-
-export const checkFinish = () => {
-  const response = {
-    type: 'finish',
-    data: { winPlayer: 0 },
-    id: 0,
-  };
-
-  games.getGames().forEach((game) => {
-    const roomUsers = game.room.users;
-    if (game && roomUsers.length === 1) {
-      const userId = roomUsers[0].id;
-      if (userId) response.data.winPlayer = userId;
-    }
-
-    game.players.forEach((player) => {
-      if (player.ships.every((ship) => ship.damage === ship.length)) {
-        const enemy = game.players.find(
-          (plr) => plr.playerId !== player.playerId,
-        );
-        if (enemy) {
-          response.data.winPlayer = enemy?.playerId;
-        }
-      }
-    });
-
-    if (response.data.winPlayer) {
-      game.room.users.forEach((usr) =>
-        usr.socket?.send(respToString(response)),
-      );
-      const user = users.getUserById(response.data.winPlayer);
-      if (user) user.wins += 1;
-      users.getUsers().forEach(usr => usr.socket?.send(getResponseWinners()));
-      rooms.deleteRoom(game.room.id);
-      games.deleteGame(game.id);
-    }
-
-  });
-};
-
-export const getResponseWinners = () => {
-  const data = users.getUsers().sort(user => user.wins).map(user => {
-    return {
-      name: user.name,
-      wins: user.wins,
-    }
-  });
-  return respToString({ type: 'update_winners', data, id: 0 });
-}
