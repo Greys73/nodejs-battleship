@@ -13,6 +13,7 @@ export type TUser = {
   socket?: WebSocket;
   error?: boolean;
   errorText?: string;
+  bot?: boolean;
 };
 export type TUsers = TUser[];
 

@@ -8,12 +8,14 @@ import {
 } from '../actions/roomAction';
 import { addShips, getAttack } from '../actions/gameAction';
 import { checkFinish, getResponseWinners } from '../actions/finishAction';
+import createClient from '../ws_client/ws_client';
+import { log } from '../utils/utils';
 
 const PORT = 3000;
 
 const wss = new WebSocketServer({ port: PORT });
 
-console.log(`Start WebSocketServer on the ${PORT} port!`);
+log.info(`Start WebSocketServer on the ${PORT} port!`);
 wss.on('connection', (ws) => {
   ws.on('error', console.error);
   ws.on('message', input.bind(ws));
@@ -41,6 +43,9 @@ function input(this: WebSocket, _data: string) {
       createRoom(this);
       sendForAll(getResponseReadyRooms());
       break;
+    case 'single_play':
+      createClient(createRoom(this));
+      break;
     case 'add_user_to_room':
       addUserToRoom(this, JSON.parse(data));
       sendForAll(getResponseReadyRooms());
@@ -58,7 +63,7 @@ function input(this: WebSocket, _data: string) {
       break;
   }
 
-  console.log(`'${type}' : ${data}`);
+  log.message(`'${type}' : ${data}`);
 }
 
 export default wss;

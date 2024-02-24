@@ -105,13 +105,13 @@ export const getAttack = (data: TAttack) => {
       hittedShip.damage = hittedShip.damage ? hittedShip.damage + 1 : 1;
     }
     if (hittedShip.damage === hittedShip.length) {
-      missAroundShip(hittedShip).forEach(c => {
+      missAroundShip(hittedShip).forEach((c) => {
         responseData.position.x = c.x;
         responseData.position.y = c.y;
         sendAttack(game, responseData);
       });
       responseData.status = 'killed';
-      fullDestroyShip(hittedShip).forEach(c => {
+      fullDestroyShip(hittedShip).forEach((c) => {
         responseData.position.x = c.x;
         responseData.position.y = c.y;
         sendAttack(game, responseData);
@@ -182,15 +182,15 @@ const fullDestroyShip = (ship: TShip) => {
   const cells: { x: number; y: number }[] = [];
   if (vertical) {
     for (let i = y; i < y + len; i++) {
-      cells.push({x, y: i});
+      cells.push({ x, y: i });
     }
   } else {
     for (let i = x; i < x + len; i++) {
-      cells.push({x: i, y});
+      cells.push({ x: i, y });
     }
   }
   return cells;
-}
+};
 
 const sendAttack = (game: TGame, data: TAttackResponse) => {
   const response = {
