@@ -20,10 +20,10 @@ class UsersDB {
   getUserById = (id: number) => this.users.find((user) => user.id === id);
 
   addUser = (_user: TUser, socket: WebSocket) => {
-    const { name, password, bot = false } = _user;
+    const { name, password, botSocket } = _user;
     const id = generateCustomId();
     const wins = 0;
-    const user: TUser = { id, name, password, socket, wins, bot };
+    const user: TUser = { id, name, password, socket, wins, botSocket };
     this.users.push(user);
     return user;
   };

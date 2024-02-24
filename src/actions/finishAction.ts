@@ -44,6 +44,7 @@ export const checkFinish = () => {
 export const getResponseWinners = () => {
   const data = users
     .getUsers()
+    .filter((user) => !user.botSocket)
     .sort((user) => user.wins)
     .map((user) => {
       return {

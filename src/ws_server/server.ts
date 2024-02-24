@@ -54,10 +54,10 @@ function input(this: WebSocket, _data: string) {
       addShips(JSON.parse(data));
       break;
     case 'attack':
-      getAttack(JSON.parse(data));
+      getAttack(this, JSON.parse(data));
       break;
     case 'randomAttack':
-      getAttack(JSON.parse(data));
+      getAttack(this, JSON.parse(data));
       break;
     default:
       break;

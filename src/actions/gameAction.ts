@@ -1,3 +1,4 @@
+import { WebSocket } from 'ws';
 import {
   TRoom,
   TAttack,
@@ -11,6 +12,7 @@ import { randomNumber, respToString } from '../utils/utils';
 import games from '../database/games';
 import rooms from '../database/rooms';
 import { checkFinish } from './finishAction';
+import users from '../database/users';
 
 const FIELD_SIZE = 10;
 
@@ -79,17 +81,18 @@ const sendTurn = (room: TRoom, turn: number) => {
   });
 };
 
-export const getAttack = (data: TAttack) => {
+export const getAttack = (socket: WebSocket, data: TAttack) => {
   const {
     gameId,
     x = randomNumber(0, FIELD_SIZE),
     y = randomNumber(0, FIELD_SIZE),
     indexPlayer,
   } = data;
+  const user = users.getUserBySocket(socket);
   const game = games.getGame(gameId);
   if (!game) return false;
   const enemy = game.players.find((plr) => plr.playerId !== indexPlayer);
-  if (indexPlayer !== game.curPlayer || !enemy) return false;
+  if (user?.id !== game.curPlayer || !enemy) return false;
 
   const responseData: TAttackResponse = {
     position: { x, y },
@@ -121,8 +124,11 @@ export const getAttack = (data: TAttack) => {
       responseData.status = 'shot';
       sendAttack(game, responseData);
     }
+    sendTurn(game.room, indexPlayer);
   } else {
     sendAttack(game, responseData);
+    game.curPlayer = enemy.playerId;
+    sendTurn(game.room, enemy.playerId);
   }
 };
 
