@@ -7,12 +7,8 @@ import { createGame } from './gameAction';
 export const createRoom = (socket: WebSocket) => {
   const user = users.getUserBySocket(socket);
   if (user) {
-    const room = rooms.findUserInRoom(user)
-    if ( room === undefined) {
-      return rooms.addRoom(user);
-    } else {
-      return room;
-    }
+    const room = rooms.findUserInRoom(user);
+    return room || rooms.addRoom(user);
   }
 };
 

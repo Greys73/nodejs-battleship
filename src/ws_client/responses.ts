@@ -11,7 +11,7 @@ export const newBot = () => {
     data: {
       name: `bot_${generateCustomId()}`,
       password: generateCustomId().toString(),
-      bot: true,
+      botSocket: true,
     },
     id: 0,
   });
