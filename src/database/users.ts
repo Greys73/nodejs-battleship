@@ -27,6 +27,11 @@ class UsersDB {
     this.users.push(user);
     return user;
   };
+
+  deleteUser = (id: number) => {
+    const index = this.users.findIndex((user) => user.id === id);
+    this.users.splice(index, 1);
+  };
 }
 
 const users = new UsersDB();

@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws';
-import { TRoom } from '../types/types';
+import { TAttackResponse, TRoom, TUser } from '../types/types';
 import { newBot, addBotToRoom, addBotShips, randomAttack } from './responses';
 import users from '../database/users';
 import games from '../database/games';
@@ -35,6 +35,14 @@ function input(this: WebSocket, _data: string) {
         }
       }, 1000);
       break;
+    case 'attack':
+      if (bot && bot.id === JSON.parse(data).currentPlayer) {
+        getAttack(bot, JSON.parse(data));
+      }
+      break;
+    case 'finish':
+      if (bot) users.deleteUser(bot.id!);
+      break;
     default:
       break;
   }
@@ -44,4 +52,15 @@ const setBotSocket = (socket: WebSocket, { index }: { index: number }) => {
   const user = users.getUserById(index);
   if (user) user.botSocket = socket;
 };
+
+const getAttack = (bot: TUser, data: TAttackResponse) => {
+  const game = games.getGameByUserId(bot.id!);
+  const enemy = game?.players.find((plr) => plr.playerId !== bot.id);
+  if (enemy) {
+    const { x, y } = data.position;
+    const repeat = enemy.shoots.find((s) => s.x === x && s.y === y);
+    if (!repeat) enemy.shoots.push({ x, y });
+  }
+};
+
 export default createClient;

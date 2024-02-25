@@ -1,3 +1,4 @@
+import games from '../database/games';
 import users from '../database/users';
 import generateCustomId from '../utils/generateId';
 import { randomNumber, respToString } from '../utils/utils';
@@ -44,14 +45,35 @@ export const addBotShips = ({ idGame, idPlayer }: TaddBotShips) => {
 };
 
 export const randomAttack = (gameId: number, indexPlayer: number) => {
+  const map = createMap();
+  const game = games.getGameByUserId(indexPlayer);
+  const enemy = game?.players.find((plr) => plr.playerId !== indexPlayer);
+  if (enemy) {
+    enemy.shoots.forEach((s) => {
+      const index = map.findIndex((m) => s.x === m.x && s.y === m.y);
+      if (index >= 0) map.splice(index, 1);
+    });
+  }
+  const hit = randomNumber(0, map.length);
+
   return respToString({
     type: 'attack',
     data: {
       gameId,
       indexPlayer,
-      x: randomNumber(0, FIELD_SIZE),
-      y: randomNumber(0, FIELD_SIZE),
+      x: map[hit].x,
+      y: map[hit].y,
     },
     id: 0,
   });
+};
+
+const createMap = () => {
+  const result = [];
+  for (let x = 0; x < FIELD_SIZE; x++) {
+    for (let y = 0; y < FIELD_SIZE; y++) {
+      result.push({ x, y });
+    }
+  }
+  return result;
 };
