@@ -12,6 +12,9 @@ class GamesDB {
 
   getGame = (id: number) => this.games.find((game) => game.id === id);
 
+  getGameByUserId = (id: number) =>
+    this.games.find((game) => game.players.find((plr) => plr.playerId === id));
+
   addGame = (maker: TUser, room: TRoom) => {
     const id = generateCustomId();
     const players: TPlayers = [];

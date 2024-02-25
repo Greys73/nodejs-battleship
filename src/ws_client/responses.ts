@@ -43,23 +43,15 @@ export const addBotShips = ({ idGame, idPlayer }: TaddBotShips) => {
   });
 };
 
-type TrandomAttack = { currentPlayer: number };
-export const randomAttack = (
-  gameId: number,
-  { currentPlayer }: TrandomAttack,
-) => {
-  const user = users.getUserById(currentPlayer);
-  if (user) {
-    return respToString({
-      type: 'attack',
-      data: {
-        gameId,
-        indexPlayer: user?.id,
-        x: randomNumber(0, FIELD_SIZE),
-        y: randomNumber(0, FIELD_SIZE),
-      },
-      id: 0,
-    });
-  }
-  return respToString({ type: 'none', data: {}, id: 0 });
+export const randomAttack = (gameId: number, indexPlayer: number) => {
+  return respToString({
+    type: 'attack',
+    data: {
+      gameId,
+      indexPlayer,
+      x: randomNumber(0, FIELD_SIZE),
+      y: randomNumber(0, FIELD_SIZE),
+    },
+    id: 0,
+  });
 };

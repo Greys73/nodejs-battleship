@@ -1,7 +1,6 @@
 import { WebSocket } from 'ws';
 import { TRoom } from '../types/types';
 import { newBot, addBotToRoom, addBotShips, randomAttack } from './responses';
-// import { log } from '../utils/utils';
 import users from '../database/users';
 import games from '../database/games';
 
@@ -31,11 +30,8 @@ function input(this: WebSocket, _data: string) {
     case 'turn':
       setTimeout(() => {
         if (bot && bot.id === JSON.parse(data).currentPlayer) {
-          const gameId =
-            games
-              .getGames()
-              .find((g) => g.room.users.find((u) => u.id === bot.id))?.id || 0;
-          this.send(randomAttack(gameId, JSON.parse(data)));
+          const gameId = games.getGameByUserId(bot.id!)?.id || 0;
+          this.send(randomAttack(gameId, bot.id!));
         }
       }, 1000);
       break;
